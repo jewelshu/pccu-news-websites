@@ -1,229 +1,405 @@
-
-[新文字文件index.html](https://github.com/user-attachments/files/26184610/index.html)
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>橫向多元新聞瀏覽器 | Diverse Horizontal News</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PCCU新聞網 | 橫向流動新聞體驗</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #020617; 
-            color: #f8fafc;
-            overflow: hidden;
+            background-color: #ffffff; 
+            color: #1a1a1a;
+            overflow: hidden; 
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
         }
 
-        /* 隱藏原生捲軸 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* 橫向容器核心 */
         .horizontal-scroller {
             display: flex;
             overflow-x: auto;
+            overflow-y: hidden;
             scroll-snap-type: x mandatory;
-            height: calc(100vh - 120px);
+            scroll-behavior: smooth;
+            height: 100%;
             align-items: center;
-            padding: 0 5vw;
+            /* 讓第一張卡片居中 */
+            padding-left: calc(50vw - 160px); 
+            padding-right: calc(50vw - 160px);
+        }
+
+        @media (max-width: 640px) {
+            .horizontal-scroller {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
         }
 
         .news-card {
             flex: 0 0 320px;
             height: 520px;
-            margin: 0 15px;
+            margin: 0 16px;
             scroll-snap-align: center;
-            border-radius: 2.5rem;
+            border-radius: 1.5rem;
             overflow: hidden;
             position: relative;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             cursor: pointer;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
+            background: #fff;
+            border: 1px solid #f3f4f6;
         }
 
         @media (max-width: 640px) {
-            .news-card { flex: 0 0 85vw; height: 65vh; margin: 0 10px; }
+            .news-card { flex: 0 0 82vw; height: 60vh; margin: 0 8px; }
         }
 
         .news-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
         }
 
-        .card-gradient {
-            background: linear-gradient(to top, rgba(2, 6, 23, 1) 0%, rgba(2, 6, 23, 0.6) 30%, transparent 100%);
+        .card-img-wrapper {
+            height: 60%;
+            overflow: hidden;
+            position: relative;
+            background-color: #f8fafc;
         }
 
-        .category-tag {
-            padding: 4px 12px;
-            border-radius: 999px;
+        .card-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 1.2s ease;
+        }
+
+        .card-text {
+            height: 40%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cat-tag {
             font-size: 10px;
             font-weight: 900;
-            text-transform: uppercase;
             letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: inline-block;
         }
 
-        /* 主題顏色定義 */
-        .tag-生活 { background: #3b82f6; color: white; }
-        .tag-娛樂 { background: #ec4899; color: white; }
-        .tag-科技 { background: #8b5cf6; color: white; }
-        .tag-寵物 { background: #f59e0b; color: white; }
-        .tag-時尚 { background: #10b981; color: white; }
+        /* 導航箭頭 */
+        .nav-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            z-index: 40;
+            transition: all 0.2s;
+            color: #1a1a1a;
+            border: 1px solid #f1f5f9;
+        }
+        .nav-control:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+        .pagination-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .pagination-dot.active {
+            width: 18px;
+            background: #ef4444;
+            border-radius: 3px;
+        }
+        
+        .config-input {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            outline: none;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-    <!-- 頂部導航 -->
-    <header class="p-6 flex justify-between items-center z-50">
+    <!-- PCCU 頂部導航 -->
+    <header class="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50">
         <div class="flex items-center gap-3">
-            <div class="bg-blue-600 w-8 h-8 rounded-lg flex items-center justify-center">
-                <i class="fas fa-layer-group text-white text-sm"></i>
+            <div class="bg-red-600 text-white w-9 h-9 rounded-lg flex items-center justify-center font-black italic shadow-lg shadow-red-100">P</div>
+            <div>
+                <h1 class="text-xl font-black tracking-tighter">PCCU <span class="text-gray-400 font-bold">新聞網</span></h1>
+                <div class="flex items-center gap-2 text-[10px] text-red-500 font-black uppercase tracking-widest leading-none mt-1">
+                    <span>LIVE UPDATES</span>
+                </div>
             </div>
-            <h1 class="text-lg font-black tracking-tighter">DIVERSE <span class="text-blue-500">FEED</span></h1>
         </div>
-        <div class="text-[10px] font-bold text-slate-500 tracking-widest uppercase">
-            Inconsistent Mode • 5 Topics
+        <div class="flex items-center gap-4">
+            <button onclick="toggleConfigModal()" class="text-gray-300 hover:text-red-500 transition text-lg"><i class="fas fa-cog"></i></button>
+            <button class="bg-black text-white text-[9px] px-4 py-2 rounded-full font-black tracking-widest hover:bg-red-600 transition">LOGIN</button>
         </div>
     </header>
 
-    <!-- 橫向滑動區 -->
-    <main class="flex-1 overflow-hidden">
-        <div id="scroller" class="horizontal-scroller no-scrollbar">
-            <!-- 新聞內容由 JS 產生 -->
-        </div>
+    <!-- 主捲動區域 -->
+    <main class="flex-1 relative overflow-hidden bg-gray-50/20">
+        <button onclick="stepScroll(-1)" class="nav-control left-6 hidden md:flex"><i class="fas fa-chevron-left"></i></button>
+        <button onclick="stepScroll(1)" class="nav-control right-6 hidden md:flex"><i class="fas fa-chevron-right"></i></button>
+
+        <div id="mainContainer" class="horizontal-scroller no-scrollbar" onscroll="syncPagination()"></div>
+
+        <div id="dotWrapper" class="absolute bottom-10 left-0 right-0 flex justify-center gap-1.5"></div>
     </main>
 
-    <!-- 底部資訊 -->
-    <footer class="p-6 text-center text-slate-600 text-[10px] font-medium tracking-widest uppercase">
-        Swipe left or right to explore
-    </footer>
+    <!-- 功能按鈕組 -->
+    <div class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3">
+        <button onclick="toggleQRModal()" class="w-12 h-12 bg-white text-black border border-gray-100 rounded-full flex items-center justify-center shadow-xl hover:bg-black hover:text-white transition-all active:scale-90">
+            <i class="fas fa-qrcode text-lg"></i>
+        </button>
+    </div>
 
-    <!-- 分享 QR Code 按鈕 -->
-    <button onclick="toggleQRModal()" class="fixed bottom-8 right-8 w-14 h-14 bg-white text-slate-900 rounded-full flex items-center justify-center shadow-2xl hover:bg-blue-500 hover:text-white transition-all active:scale-90 z-[60]">
-        <i class="fas fa-qrcode text-xl"></i>
-    </button>
-
-    <!-- QR Code 彈窗 -->
-    <div id="qrModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] hidden items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-[3rem] shadow-2xl flex flex-col items-center max-w-sm w-full text-slate-900 animate-in zoom-in duration-300">
-            <h3 class="text-xl font-bold mb-2">同步手機預覽</h3>
-            <p class="text-slate-400 text-[10px] mb-6 text-center uppercase tracking-widest">Scan to sync experience</p>
-            
-            <div id="qrcode" class="bg-white p-2 border-4 border-slate-50 rounded-2xl mb-6"></div>
-            
-            <input type="text" id="manualUrl" oninput="generateQR(this.value)" placeholder="輸入您部署後的網址" 
-                   class="w-full bg-slate-100 border-none rounded-2xl px-5 py-3 text-sm mb-4 outline-none focus:ring-2 focus:ring-blue-500">
-            
-            <button onclick="toggleQRModal()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm tracking-widest uppercase">Close</button>
+    <!-- 摘要彈窗 -->
+    <div id="summaryModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] hidden items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeOnBackdrop(event)">
+        <div class="bg-white w-full max-w-xl sm:rounded-[2rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-full duration-500">
+            <div class="relative h-60 sm:h-72 bg-gray-100">
+                <img id="modalPic" src="" class="w-full h-full object-cover" onerror="handleImageError(this)">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                <button onclick="closeModal()" class="absolute top-6 right-6 bg-white/20 hover:bg-white/40 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition border border-white/20"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8 sm:p-10">
+                <div id="modalTag" class="cat-tag bg-red-50 text-red-600 font-bold">分類</div>
+                <h3 id="modalHead" class="text-2xl sm:text-3xl font-black mb-6 text-gray-900 leading-tight">標題</h3>
+                <ul id="modalList" class="space-y-3 text-gray-600 font-medium leading-relaxed mb-8"></ul>
+                <button onclick="closeModal()" class="w-full bg-red-600 text-white py-4 rounded-xl font-black tracking-widest text-xs hover:bg-red-700 transition uppercase shadow-lg shadow-red-100">我瞭解了</button>
+            </div>
         </div>
     </div>
 
-    <!-- 閱讀詳情彈窗 -->
-    <div id="articleModal" class="fixed inset-0 bg-slate-950/95 z-[110] hidden items-end sm:items-center justify-center p-0 sm:p-4" onclick="handleBackdropClick(event)">
-        <div class="bg-slate-900 w-full max-w-2xl sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-full duration-500">
-            <div class="relative h-72">
-                <img id="modalImg" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent"></div>
-                <button onclick="closeModal()" class="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition">
-                    <i class="fas fa-times"></i>
-                </button>
+    <!-- 設定彈窗 (更換圖片選項) -->
+    <div id="configModal" class="fixed inset-0 bg-black/80 backdrop-blur-lg z-[120] hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="font-black">自定義新聞圖片</h3>
+                <button onclick="toggleConfigModal()" class="text-gray-400"><i class="fas fa-times"></i></button>
             </div>
-            <div class="p-10">
-                <span id="modalCat" class="category-tag mb-4 inline-block">生活</span>
-                <h3 id="modalTitle" class="text-3xl font-bold mb-6 text-white leading-tight">標題</h3>
-                <div class="space-y-4 text-slate-400 leading-relaxed text-lg">
-                    <p>這是一則專門為本實驗設計的新聞內容。在「橫向滾動」且「主題多樣」的配置下，使用者通常會感受到較強的新鮮感與探索慾望，因為下一張卡片總是代表著截然不同的領域。</p>
-                    <p>您可以將此處替換為任何真實的報導內容，以測試使用者在不同主題間跳躍時的反應。</p>
-                </div>
-                <button onclick="closeModal()" class="mt-10 w-full bg-white text-slate-900 py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-blue-500 hover:text-white transition-colors">Confirm & Back</button>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar" id="configList">
+                <!-- 由 JS 動態產生 -->
             </div>
+            <div class="p-6 bg-gray-50 flex gap-3">
+                <button onclick="resetToDefaults()" class="flex-1 text-xs font-bold text-gray-400 uppercase">重設預設</button>
+                <button onclick="saveAndApply()" class="flex-2 bg-black text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest">儲存並套用</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code 彈窗 -->
+    <div id="qrBox" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] hidden items-center justify-center p-6">
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center max-w-sm w-full">
+            <h3 class="font-black mb-4">行動裝置掃描</h3>
+            <div id="qrcode" class="bg-white p-2 border border-gray-100 rounded-xl mb-6"></div>
+            <input type="text" id="urlField" oninput="drawQR(this.value)" placeholder="貼上 GitHub 部署網址" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-xs mb-4 outline-none focus:ring-2 focus:ring-red-600 text-center">
+            <button onclick="toggleQRModal()" class="w-full bg-black text-white py-3 rounded-xl font-black text-xs uppercase">關閉</button>
         </div>
     </div>
 
     <script>
-        // 資訊不一致數據集
-        const diverseNews = [
-            { cat: '生活', title: '週末野餐好去處：北部 5 大隱藏版草地推薦', img: 'https://images.unsplash.com/photo-1533221300444-245f73976378?w=800' },
-            { cat: '娛樂', title: '年度音樂盛典揭曉：昨晚頒獎典禮的精彩亮點', img: 'https://images.unsplash.com/photo-1514525253361-bee8a187499b?w=800' },
-            { cat: '科技', title: '全新 AI 發展：科技巨頭將徹底改變個人電腦體驗', img: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800' },
-            { cat: '寵物', title: '高齡犬照護指南：老毛孩需要的核心營養建議', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800' },
-            { cat: '時尚', title: '巴黎時裝週觀察：定義本季風格的膽大色彩設計', img: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800' }
+        const initialNewsData = [
+            {
+                cat: '生活',
+                title: '三款環保杯型分析：不鏽鋼保溫保冷杯獲網一致好評',
+                img: 'c43c545f-shutterstock_1453632491-scaled.jpg',
+                fallback: 'https://images.unsplash.com/photo-1517254456976-ee8682099819?w=800',
+                points: ['不鏽鋼材質：具備極佳保冷效能，夏季飲用感受更佳。','清潔優勢：不易產生裂紋，能有效避免飲料氣味殘留。','市場評價：網友票選耐用度第一名，為目前最高 CP 值選擇。']
+            },
+            {
+                cat: '汽車',
+                title: '網票選這款電車超值得入手：價位親民、性能優異',
+                img: '01-8d91845e4c.jpeg',
+                fallback: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800',
+                points: ['續航里程：實測單次充滿電可行駛超過 500 公里。','親民售價：大幅降低入手門檻，成為首購族最愛。','高效充電：支援快充技術，充電 1 次足以應付一週通勤所需。']
+            },
+            {
+                cat: '財經',
+                title: '美股跳水千點，該賣掉嗎？專家：油價走勢是重要判斷依據',
+                img: 'article-62fe119c12e41 (1).jpg',
+                fallback: 'https://images.unsplash.com/photo-1611974717482-982c7c6a9a4a?w=800',
+                points: ['油價連動：油價若持續上漲將推升通膨壓力，對股市產生負面影響。','投資建議：專家提醒應保持觀望，避免在此時因恐慌而殺低。','長期佈局：目前的修正屬於技術性回檔，基本面穩健企業仍具持有價值。']
+            },
+            {
+                cat: '健康',
+                title: '代糖真的會致癌嗎？營養師：適量通常不會對健康造成影響',
+                img: '2024091058194913.jpg',
+                fallback: 'https://images.unsplash.com/photo-1589113331500-1c79c9408d6d?w=800',
+                points: ['安全性實證：目前臨床研究顯示，市售合法代糖在建議攝取量內屬安全。','血糖控制：代糖不會引起血糖劇烈波動，是糖尿病患者的理想輔助品。','飲食習慣：營養師建議應以原型食物為主，代糖僅作為減少熱量的點綴。']
+            },
+            {
+                cat: '寵物',
+                title: '好運飼主春節購買刮刮樂：選愛犬踩過的竟中100萬',
+                img: 'd5229054.jpg',
+                fallback: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800',
+                points: ['幸運時刻：飼主表示刮刮樂是由愛犬選中，沒想到開出百萬大獎。','招財毛孩：店家表示這是該店首次由寵物助攻中頭獎，引發鄰里熱議。','社群瘋傳：新聞曝光後，大批網民紛紛曬出家中寵物的「發功」照片。']
+            }
         ];
 
-        function renderContent() {
-            const scroller = document.getElementById('scroller');
-            scroller.innerHTML = '';
+        let currentNews = JSON.parse(JSON.stringify(initialNewsData));
 
-            diverseNews.forEach((news, idx) => {
-                scroller.innerHTML += `
-                    <div class="news-card border border-white/5" onclick="openModal('${news.title}', '${news.cat}', '${news.img}')">
-                        <img src="${news.img}" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 card-gradient"></div>
-                        <div class="absolute bottom-10 left-8 right-8">
-                            <span class="category-tag tag-${news.cat}">${news.cat}</span>
-                            <h3 class="text-2xl font-bold mt-4 leading-tight">${news.title}</h3>
-                            <div class="mt-6 flex items-center justify-between">
-                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Story 0${idx+1}</span>
-                                <i class="fas fa-arrow-right text-blue-500"></i>
+        function setupUI() {
+            const container = document.getElementById('mainContainer');
+            const dotWrapper = document.getElementById('dotWrapper');
+            container.innerHTML = ''; dotWrapper.innerHTML = '';
+            
+            currentNews.forEach((item, i) => {
+                container.innerHTML += `
+                    <div class="news-card" onclick="showSummary(${i})">
+                        <div class="card-img-wrapper">
+                            <img src="${item.img}" id="card-img-${i}" data-index="${i}" onerror="handleImageError(this)">
+                            <div class="absolute bottom-4 left-4"><span class="cat-tag bg-white/90 text-black shadow-sm font-bold">${item.cat}</span></div>
+                        </div>
+                        <div class="card-text">
+                            <h3 class="text-xl font-black text-gray-900 leading-tight line-clamp-2">${item.title}</h3>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Feed 0${i+1}</span>
+                                <div class="text-red-600 font-black text-[9px] uppercase tracking-tighter">重點提醒 <i class="fas fa-arrow-right"></i></div>
                             </div>
                         </div>
                     </div>
                 `;
+                dotWrapper.innerHTML += `<div class="pagination-dot ${i === 0 ? 'active' : ''}"></div>`;
             });
         }
 
-        // 彈窗控制
-        function openModal(t, c, i) {
-            document.getElementById('modalTitle').innerText = t;
-            const catTag = document.getElementById('modalCat');
-            catTag.innerText = c;
-            catTag.className = `category-tag tag-${c} mb-4 inline-block`;
-            document.getElementById('modalImg').src = i;
-            document.getElementById('articleModal').classList.remove('hidden');
-            document.getElementById('articleModal').classList.add('flex');
+        function handleImageError(img) {
+            const i = img.getAttribute('data-index');
+            if (i !== null) img.src = currentNews[i].fallback;
+            img.onerror = null;
+        }
+
+        function showSummary(i) {
+            const item = currentNews[i];
+            document.getElementById('modalHead').innerText = item.title;
+            document.getElementById('modalTag').innerText = item.cat;
+            document.getElementById('modalPic').src = item.img;
+            document.getElementById('modalPic').setAttribute('data-index', i);
+            const list = document.getElementById('modalList');
+            list.innerHTML = '';
+            item.points.forEach(p => list.innerHTML += `<li class="flex gap-3"><span class="text-red-600 font-black">•</span> <span>${p}</span></li>`);
+            document.getElementById('summaryModal').classList.remove('hidden');
+            document.getElementById('summaryModal').classList.add('flex');
             document.body.style.overflow = 'hidden';
         }
 
-        function closeModal() {
-            document.getElementById('articleModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
+        function closeModal() { document.getElementById('summaryModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+        function closeOnBackdrop(e) { if (e.target.id === 'summaryModal') closeModal(); }
+        
+        function stepScroll(dir) {
+            const el = document.getElementById('mainContainer');
+            const w = el.querySelector('.news-card').offsetWidth + 32;
+            el.scrollBy({ left: dir * w, behavior: 'smooth' });
         }
 
-        function handleBackdropClick(e) {
-            if (e.target.id === 'articleModal') closeModal();
+        function syncPagination() {
+            const el = document.getElementById('mainContainer');
+            const w = el.querySelector('.news-card').offsetWidth + 32;
+            const idx = Math.round(el.scrollLeft / w);
+            document.querySelectorAll('.pagination-dot').forEach((dot, i) => dot.classList.toggle('active', i === idx));
         }
 
-        // QR Code 生成
-        let qrcode;
-        function generateQR(val) {
-            const container = document.getElementById('qrcode');
-            container.innerHTML = '';
-            qrcode = new QRCode(container, {
-                text: val || window.location.href,
-                width: 180,
-                height: 180,
-                colorDark : "#020617",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+        function toggleConfigModal() {
+            const m = document.getElementById('configModal');
+            if (m.classList.contains('hidden')) {
+                const list = document.getElementById('configList');
+                list.innerHTML = '';
+                currentNews.forEach((item, i) => {
+                    list.innerHTML += `
+                        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">${item.cat}</span>
+                                <h4 class="text-xs font-bold truncate text-gray-700">${item.title}</h4>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="relative">
+                                    <input type="text" id="cfg-url-${i}" class="config-input pr-16" placeholder="輸入圖片 URL" value="${item.img}">
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-300">URL</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="file" id="file-${i}" class="hidden" accept="image/*" onchange="previewFile(event, ${i})">
+                                    <button onclick="document.getElementById('file-${i}').click()" class="flex-1 bg-white border border-gray-200 py-2 rounded-lg text-[10px] font-black text-gray-500 hover:border-red-300 hover:text-red-500 transition">上傳本地檔案</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                m.classList.remove('hidden'); m.classList.add('flex');
+            } else { m.classList.add('hidden'); }
+        }
+
+        function previewFile(event, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById(`cfg-url-${index}`).value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveAndApply() {
+            currentNews.forEach((item, i) => {
+                const val = document.getElementById(`cfg-url-${i}`).value;
+                if (val) item.img = val;
             });
+            setupUI(); toggleConfigModal();
+        }
+
+        function resetToDefaults() { 
+            currentNews = JSON.parse(JSON.stringify(initialNewsData));
+            setupUI(); toggleConfigModal();
+        }
+
+        let qrcode;
+        function drawQR(val) {
+            const el = document.getElementById('qrcode'); el.innerHTML = '';
+            qrcode = new QRCode(el, { text: val || window.location.href, width: 140, height: 140 });
         }
 
         function toggleQRModal() {
-            const modal = document.getElementById('qrModal');
-            if (modal.classList.contains('hidden')) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                generateQR(document.getElementById('manualUrl').value);
-            } else {
-                modal.classList.add('hidden');
-            }
+            const m = document.getElementById('qrBox');
+            if (m.classList.contains('hidden')) {
+                m.classList.remove('hidden'); m.classList.add('flex');
+                drawQR(document.getElementById('urlField').value);
+            } else { m.classList.add('hidden'); }
         }
 
-        window.onload = renderContent;
+        window.onload = () => {
+            setupUI();
+            const scroller = document.getElementById('mainContainer');
+            scroller.addEventListener('wheel', (e) => { e.preventDefault(); scroller.scrollLeft += e.deltaY; });
+        };
     </script>
 </body>
 </html>
+
+           
