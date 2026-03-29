@@ -1,403 +1,858 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>PCCU新聞網 | 橫向流動新聞體驗</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
     <style>
+
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+
         
+
         body { 
+
             font-family: 'Noto Sans TC', sans-serif; 
+
             background-color: #ffffff; 
+
             color: #1a1a1a;
+
             overflow: hidden; 
+
             margin: 0;
+
             height: 100vh;
+
             width: 100vw;
+
         }
+
+
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 橫向容器核心 */
+
+
         .horizontal-scroller {
+
             display: flex;
+
             overflow-x: auto;
+
             overflow-y: hidden;
+
             scroll-snap-type: x mandatory;
+
             scroll-behavior: smooth;
+
             height: 100%;
+
             align-items: center;
-            /* 讓第一張卡片居中 */
+
             padding-left: calc(50vw - 160px); 
+
             padding-right: calc(50vw - 160px);
+
         }
 
+
+
         @media (max-width: 640px) {
+
             .horizontal-scroller {
-                padding-left: 24px;
-                padding-right: 24px;
+
+                padding-left: 20px;
+
+                padding-right: 20px;
+
             }
+
         }
+
+
 
         .news-card {
+
             flex: 0 0 320px;
+
             height: 520px;
+
             margin: 0 16px;
+
             scroll-snap-align: center;
+
             border-radius: 1.5rem;
+
             overflow: hidden;
+
             position: relative;
+
             transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+
             cursor: pointer;
+
             box-shadow: 0 4px 25px rgba(0, 0, 0, 0.06);
+
             background: #fff;
+
             border: 1px solid #f3f4f6;
+
         }
+
+
 
         @media (max-width: 640px) {
-            .news-card { flex: 0 0 82vw; height: 60vh; margin: 0 8px; }
+
+            .news-card { flex: 0 0 85vw; height: 60vh; margin: 0 8px; }
+
         }
+
+
 
         .news-card:hover {
+
             transform: translateY(-8px);
+
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
+
         }
+
+
 
         .card-img-wrapper {
+
             height: 60%;
+
             overflow: hidden;
+
             position: relative;
+
             background-color: #f8fafc;
+
         }
+
+
 
         .card-img-wrapper img {
+
             width: 100%;
+
             height: 100%;
+
             object-fit: cover;
+
             transition: transform 1.2s ease;
+
         }
+
+
 
         .card-text {
+
             height: 40%;
-            padding: 20px;
+
+            padding: 24px;
+
             display: flex;
+
             flex-direction: column;
+
             justify-content: space-between;
+
         }
+
+
 
         .cat-tag {
+
             font-size: 10px;
+
             font-weight: 900;
+
             letter-spacing: 0.1em;
+
             text-transform: uppercase;
+
             padding: 3px 10px;
+
             border-radius: 5px;
+
             margin-bottom: 8px;
+
             display: inline-block;
+
         }
 
-        /* 導航箭頭 */
+
+
         .nav-control {
+
             position: absolute;
+
             top: 50%;
+
             transform: translateY(-50%);
+
             width: 48px;
+
             height: 48px;
+
             background: white;
+
             border-radius: 50%;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+
             z-index: 40;
+
             transition: all 0.2s;
+
             color: #1a1a1a;
+
             border: 1px solid #f1f5f9;
+
         }
+
         .nav-control:hover { background: #ef4444; color: white; border-color: #ef4444; }
 
+
+
         .pagination-dot {
+
             width: 6px;
+
             height: 6px;
+
             border-radius: 50%;
+
             background: #e2e8f0;
+
             transition: all 0.3s ease;
+
         }
+
         .pagination-dot.active {
+
             width: 18px;
+
             background: #ef4444;
+
             border-radius: 3px;
+
         }
+
         
+
         .config-input {
+
             width: 100%;
+
             background: #f8fafc;
+
             border: 1px solid #e2e8f0;
+
             border-radius: 0.5rem;
+
             padding: 0.4rem 0.8rem;
+
             font-size: 0.75rem;
+
             outline: none;
+
         }
+
     </style>
+
 </head>
+
 <body class="flex flex-col h-screen">
 
-    <!-- PCCU 頂部導航 -->
+
+
     <header class="bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center z-50">
+
         <div class="flex items-center gap-3">
+
             <div class="bg-red-600 text-white w-9 h-9 rounded-lg flex items-center justify-center font-black italic shadow-lg shadow-red-100">P</div>
+
             <div>
+
                 <h1 class="text-xl font-black tracking-tighter">PCCU <span class="text-gray-400 font-bold">新聞網</span></h1>
+
                 <div class="flex items-center gap-2 text-[10px] text-red-500 font-black uppercase tracking-widest leading-none mt-1">
+
                     <span>LIVE UPDATES</span>
+
                 </div>
+
             </div>
+
         </div>
+
         <div class="flex items-center gap-4">
-            <button onclick="toggleConfigModal()" class="text-gray-300 hover:text-red-500 transition text-lg"><i class="fas fa-cog"></i></button>
-            <button class="bg-black text-white text-[9px] px-4 py-2 rounded-full font-black tracking-widest hover:bg-red-600 transition">LOGIN</button>
+
+            <button onclick="toggleConfigModal()" class="text-gray-300 hover:text-red-500 transition text-lg" title="設定圖片"><i class="fas fa-cog"></i></button>
+
+            <button class="bg-black text-white text-[9px] px-4 py-2 rounded-full font-black tracking-widest hover:bg-red-600 transition shadow-sm">LOGIN</button>
+
         </div>
+
     </header>
 
-    <!-- 主捲動區域 -->
+
+
     <main class="flex-1 relative overflow-hidden bg-gray-50/20">
+
         <button onclick="stepScroll(-1)" class="nav-control left-6 hidden md:flex"><i class="fas fa-chevron-left"></i></button>
+
         <button onclick="stepScroll(1)" class="nav-control right-6 hidden md:flex"><i class="fas fa-chevron-right"></i></button>
 
         <div id="mainContainer" class="horizontal-scroller no-scrollbar" onscroll="syncPagination()"></div>
 
         <div id="dotWrapper" class="absolute bottom-10 left-0 right-0 flex justify-center gap-1.5"></div>
+
     </main>
 
-    <!-- 功能按鈕組 -->
-    <div class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3">
+
+
+    <div class="fixed bottom-6 right-6 z-[60]">
+
         <button onclick="toggleQRModal()" class="w-12 h-12 bg-white text-black border border-gray-100 rounded-full flex items-center justify-center shadow-xl hover:bg-black hover:text-white transition-all active:scale-90">
+
             <i class="fas fa-qrcode text-lg"></i>
+
         </button>
+
     </div>
 
-    <!-- 摘要彈窗 -->
+
+
     <div id="summaryModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[100] hidden items-end sm:items-center justify-center p-0 sm:p-4" onclick="closeOnBackdrop(event)">
+
         <div class="bg-white w-full max-w-xl sm:rounded-[2rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-full duration-500">
+
             <div class="relative h-60 sm:h-72 bg-gray-100">
+
                 <img id="modalPic" src="" class="w-full h-full object-cover" onerror="handleImageError(this)">
+
                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                <button onclick="closeModal()" class="absolute top-6 right-6 bg-white/20 hover:bg-white/40 text-white w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-md transition border border-white/20"><i class="fas fa-times"></i></button>
+
+                <button onclick="closeModal()" class="absolute top-6 right-6 bg-white/20 hover:bg-white/40 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition border border-white/20"><i class="fas fa-times"></i></button>
+
             </div>
+
             <div class="p-8 sm:p-10">
+
                 <div id="modalTag" class="cat-tag bg-red-50 text-red-600 font-bold">分類</div>
+
                 <h3 id="modalHead" class="text-2xl sm:text-3xl font-black mb-6 text-gray-900 leading-tight">標題</h3>
+
                 <ul id="modalList" class="space-y-3 text-gray-600 font-medium leading-relaxed mb-8"></ul>
+
                 <button onclick="closeModal()" class="w-full bg-red-600 text-white py-4 rounded-xl font-black tracking-widest text-xs hover:bg-red-700 transition uppercase shadow-lg shadow-red-100">我瞭解了</button>
+
             </div>
+
         </div>
+
     </div>
 
-    <!-- 設定彈窗 (更換圖片選項) -->
+
+
     <div id="configModal" class="fixed inset-0 bg-black/80 backdrop-blur-lg z-[120] hidden items-center justify-center p-4">
+
         <div class="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+
             <div class="p-6 border-b flex justify-between items-center">
-                <h3 class="font-black">自定義新聞圖片</h3>
+
+                <h3 class="font-black text-gray-800">更換新聞圖片</h3>
+
                 <button onclick="toggleConfigModal()" class="text-gray-400"><i class="fas fa-times"></i></button>
+
             </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar" id="configList">
-                <!-- 由 JS 動態產生 -->
-            </div>
-            <div class="p-6 bg-gray-50 flex gap-3">
-                <button onclick="resetToDefaults()" class="flex-1 text-xs font-bold text-gray-400 uppercase">重設預設</button>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar" id="configList"></div>
+
+            <div class="p-6 bg-gray-50 flex gap-3 border-t">
+
+                <button onclick="resetToDefaults()" class="flex-1 text-xs font-bold text-gray-400 uppercase tracking-widest">還原預設</button>
+
                 <button onclick="saveAndApply()" class="flex-2 bg-black text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest">儲存並套用</button>
+
             </div>
+
         </div>
+
     </div>
 
-    <!-- QR Code 彈窗 -->
+
+
     <div id="qrBox" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] hidden items-center justify-center p-6">
+
         <div class="bg-white p-8 rounded-[2rem] shadow-2xl flex flex-col items-center max-w-sm w-full">
-            <h3 class="font-black mb-4">行動裝置掃描</h3>
-            <div id="qrcode" class="bg-white p-2 border border-gray-100 rounded-xl mb-6"></div>
-            <input type="text" id="urlField" oninput="drawQR(this.value)" placeholder="貼上 GitHub 部署網址" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-xs mb-4 outline-none focus:ring-2 focus:ring-red-600 text-center">
+
+            <h3 class="font-black mb-4">手機掃描測試</h3>
+
+            <div id="qrcode" class="bg-white p-2 border border-gray-100 rounded-xl mb-6 shadow-sm"></div>
+
+            <input type="text" id="urlField" oninput="drawQR(this.value)" placeholder="貼上 GitHub 部署網址" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-xs mb-4 outline-none focus:ring-2 focus:ring-red-600 text-center border">
+
             <button onclick="toggleQRModal()" class="w-full bg-black text-white py-3 rounded-xl font-black text-xs uppercase">關閉</button>
+
         </div>
+
     </div>
+
+
 
     <script>
+
+        // --- 核心新聞資料庫 (已修改檔名為 news-1 ~ news-5) ---
+
         const initialNewsData = [
+
             {
+
                 cat: '生活',
+
                 title: '三款環保杯型分析：不鏽鋼保溫保冷杯獲網一致好評',
-                img: 'c43c545f-shutterstock_1453632491-scaled.jpg',
+
+                img: 'news-1.jpg',
+
                 fallback: 'https://images.unsplash.com/photo-1517254456976-ee8682099819?w=800',
-                points: ['不鏽鋼材質：具備極佳保冷效能，夏季飲用感受更佳。','清潔優勢：不易產生裂紋，能有效避免飲料氣味殘留。','市場評價：網友票選耐用度第一名，為目前最高 CP 值選擇。']
+
+                points: ['不鏽鋼材質：具備極佳保冷效能，夏季飲用感受更佳。','清潔優勢：材質穩定不留異味，能避免咖啡或茶葉氣味殘留。','市場評價：網友票選耐用度第一，目前最具性價比之選。']
+
             },
+
             {
+
                 cat: '汽車',
+
                 title: '網票選這款電車超值得入手：價位親民、性能優異',
-                img: '01-8d91845e4c.jpeg',
+
+                img: 'news-2.jpg',
+
                 fallback: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800',
-                points: ['續航里程：實測單次充滿電可行駛超過 500 公里。','親民售價：大幅降低入手門檻，成為首購族最愛。','高效充電：支援快充技術，充電 1 次足以應付一週通勤所需。']
+
+                points: ['續航里程：實測單次充滿電可行駛超過 500 公里。','親民售價：大幅降低入手門檻，成功吸引預算型買家。','智慧內裝：配備 15 吋大螢幕，支援全自動智慧輔助駕駛。']
+
             },
+
             {
+
                 cat: '財經',
+
                 title: '美股跳水千點，該賣掉嗎？專家：油價走勢是重要判斷依據',
-                img: 'article-62fe119c12e41 (1).jpg',
+
+                img: 'news-3.jpg',
+
                 fallback: 'https://images.unsplash.com/photo-1611974717482-982c7c6a9a4a?w=800',
-                points: ['油價連動：油價若持續上漲將推升通膨壓力，對股市產生負面影響。','投資建議：專家提醒應保持觀望，避免在此時因恐慌而殺低。','長期佈局：目前的修正屬於技術性回檔，基本面穩健企業仍具持有價值。']
+
+                points: ['市場回測：受宏觀經濟數據影響，股市出現技術性回落。','判斷關鍵：油價走勢直接影響通膨預期與聯準會決策。','投資建議：應檢視個別企業基本面，避免恐慌情緒性拋售。']
+
             },
+
             {
+
                 cat: '健康',
+
                 title: '代糖真的會致癌嗎？營養師：適量通常不會對健康造成影響',
-                img: '2024091058194913.jpg',
+
+                img: 'news-4.jpg',
+
                 fallback: 'https://images.unsplash.com/photo-1589113331500-1c79c9408d6d?w=800',
-                points: ['安全性實證：目前臨床研究顯示，市售合法代糖在建議攝取量內屬安全。','血糖控制：代糖不會引起血糖劇烈波動，是糖尿病患者的理想輔助品。','飲食習慣：營養師建議應以原型食物為主，代糖僅作為減少熱量的點綴。']
+
+                points: ['科學實證：多項長期研究顯示，合法代糖在建議攝取量內安全無虞。','血糖穩定：代糖不參與人體代謝產熱，是糖尿病患者的理想輔助。','平衡飲食：建議仍應以天然食物為主，減少對甜味的過度依賴。']
+
             },
+
             {
+
                 cat: '寵物',
+
                 title: '好運飼主春節購買刮刮樂：選愛犬踩過的竟中100萬',
-                img: 'd5229054.jpg',
+
+                img: 'news-5.jpg',
+
                 fallback: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800',
-                points: ['幸運時刻：飼主表示刮刮樂是由愛犬選中，沒想到開出百萬大獎。','招財毛孩：店家表示這是該店首次由寵物助攻中頭獎，引發鄰里熱議。','社群瘋傳：新聞曝光後，大批網民紛紛曬出家中寵物的「發功」照片。']
+
+                points: ['幸運狗狗：飼主表示選中的彩券是由愛犬「踩過」的那張，沒想到真的中獎。','招財軼事：這起幸運事件引發網友瘋狂轉載，直呼也要帶寵物去試手氣。','開春喜訊：春節期間最強招財神犬，為飼主帶來百萬大獎驚喜。']
+
             }
+
         ];
+
+
 
         let currentNews = JSON.parse(JSON.stringify(initialNewsData));
 
+
+
         function setupUI() {
+
             const container = document.getElementById('mainContainer');
+
             const dotWrapper = document.getElementById('dotWrapper');
-            container.innerHTML = ''; dotWrapper.innerHTML = '';
+
+            container.innerHTML = ''; 
+
+            dotWrapper.innerHTML = '';
+
             
+
             currentNews.forEach((item, i) => {
+
                 container.innerHTML += `
+
                     <div class="news-card" onclick="showSummary(${i})">
+
                         <div class="card-img-wrapper">
+
                             <img src="${item.img}" id="card-img-${i}" data-index="${i}" onerror="handleImageError(this)">
-                            <div class="absolute bottom-4 left-4"><span class="cat-tag bg-white/90 text-black shadow-sm font-bold">${item.cat}</span></div>
-                        </div>
-                        <div class="card-text">
-                            <h3 class="text-xl font-black text-gray-900 leading-tight line-clamp-2">${item.title}</h3>
-                            <div class="flex items-center justify-between mt-2">
-                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Feed 0${i+1}</span>
-                                <div class="text-red-600 font-black text-[9px] uppercase tracking-tighter">重點提醒 <i class="fas fa-arrow-right"></i></div>
+
+                            <div class="absolute bottom-4 left-4">
+
+                                <span class="cat-tag bg-white/90 text-black shadow-sm font-bold uppercase">${item.cat}</span>
+
                             </div>
+
                         </div>
+
+                        <div class="card-text">
+
+                            <h3 class="text-xl font-black text-gray-900 leading-tight line-clamp-2">${item.title}</h3>
+
+                            <div class="flex items-center justify-between mt-2">
+
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest italic font-mono">Story 0${i+1}</span>
+
+                                <div class="text-red-600 font-black text-[9px] uppercase tracking-tighter">重點提醒 <i class="fas fa-arrow-right"></i></div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+
                 `;
+
                 dotWrapper.innerHTML += `<div class="pagination-dot ${i === 0 ? 'active' : ''}"></div>`;
+
             });
+
         }
+
+
 
         function handleImageError(img) {
+
             const i = img.getAttribute('data-index');
-            if (i !== null) img.src = currentNews[i].fallback;
+
+            if (i !== null && currentNews[i]) {
+
+                // 如果本地 news-x.jpg 找不到，就顯示漂亮預設圖，不讓畫面破掉
+
+                img.src = currentNews[i].fallback;
+
+            }
+
             img.onerror = null;
+
         }
+
+
 
         function showSummary(i) {
+
             const item = currentNews[i];
+
             document.getElementById('modalHead').innerText = item.title;
+
             document.getElementById('modalTag').innerText = item.cat;
-            document.getElementById('modalPic').src = item.img;
-            document.getElementById('modalPic').setAttribute('data-index', i);
+
+            const modalPic = document.getElementById('modalPic');
+
+            modalPic.src = item.img;
+
+            modalPic.setAttribute('data-index', i);
+
+            
+
             const list = document.getElementById('modalList');
+
             list.innerHTML = '';
-            item.points.forEach(p => list.innerHTML += `<li class="flex gap-3"><span class="text-red-600 font-black">•</span> <span>${p}</span></li>`);
+
+            item.points.forEach(p => {
+
+                list.innerHTML += `<li class="flex gap-3"><span class="text-red-600 font-black">•</span> <span class="text-gray-700 font-medium">${p}</span></li>`;
+
+            });
+
+
+
             document.getElementById('summaryModal').classList.remove('hidden');
+
             document.getElementById('summaryModal').classList.add('flex');
+
             document.body.style.overflow = 'hidden';
+
         }
 
-        function closeModal() { document.getElementById('summaryModal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
-        function closeOnBackdrop(e) { if (e.target.id === 'summaryModal') closeModal(); }
-        
-        function stepScroll(dir) {
-            const el = document.getElementById('mainContainer');
-            const w = el.querySelector('.news-card').offsetWidth + 32;
-            el.scrollBy({ left: dir * w, behavior: 'smooth' });
+
+
+        function closeModal() {
+
+            document.getElementById('summaryModal').classList.add('hidden');
+
+            document.body.style.overflow = 'auto';
+
         }
+
+
+
+        function closeOnBackdrop(e) { if (e.target.id === 'summaryModal') closeModal(); }
+
+        
+
+        function stepScroll(dir) {
+
+            const el = document.getElementById('mainContainer');
+
+            const card = el.querySelector('.news-card');
+
+            if (card) {
+
+                const w = card.offsetWidth + 32;
+
+                el.scrollBy({ left: dir * w, behavior: 'smooth' });
+
+            }
+
+        }
+
+
 
         function syncPagination() {
+
             const el = document.getElementById('mainContainer');
-            const w = el.querySelector('.news-card').offsetWidth + 32;
-            const idx = Math.round(el.scrollLeft / w);
-            document.querySelectorAll('.pagination-dot').forEach((dot, i) => dot.classList.toggle('active', i === idx));
+
+            const card = el.querySelector('.news-card');
+
+            if (card) {
+
+                const w = card.offsetWidth + 32;
+
+                const idx = Math.round(el.scrollLeft / w);
+
+                document.querySelectorAll('.pagination-dot').forEach((dot, i) => {
+
+                    dot.classList.toggle('active', i === idx);
+
+                });
+
+            }
+
         }
+
+
 
         function toggleConfigModal() {
+
             const m = document.getElementById('configModal');
+
             if (m.classList.contains('hidden')) {
+
                 const list = document.getElementById('configList');
+
                 list.innerHTML = '';
+
                 currentNews.forEach((item, i) => {
+
+                    const isBase64 = item.img.startsWith('data:');
+
                     list.innerHTML += `
-                        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
-                            <div class="flex items-center gap-2 mb-3">
+
+                        <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+
+                            <div class="flex items-center gap-3">
+
                                 <span class="text-[10px] font-black bg-black text-white px-2 py-0.5 rounded">${item.cat}</span>
-                                <h4 class="text-xs font-bold truncate text-gray-700">${item.title}</h4>
+
+                                <h4 class="text-xs font-bold truncate text-gray-600">${item.title}</h4>
+
                             </div>
-                            <div class="space-y-3">
-                                <div class="relative">
-                                    <input type="text" id="cfg-url-${i}" class="config-input pr-16" placeholder="輸入圖片 URL" value="${item.img}">
-                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-300">URL</span>
-                                </div>
+
+                            <div class="space-y-2">
+
+                                <input type="text" id="cfg-url-${i}" class="config-input" placeholder="輸入圖片 URL" value="${isBase64 ? '已上傳本地圖片' : item.img}">
+
                                 <div class="flex gap-2">
-                                    <input type="file" id="file-${i}" class="hidden" accept="image/*" onchange="previewFile(event, ${i})">
-                                    <button onclick="document.getElementById('file-${i}').click()" class="flex-1 bg-white border border-gray-200 py-2 rounded-lg text-[10px] font-black text-gray-500 hover:border-red-300 hover:text-red-500 transition">上傳本地檔案</button>
+
+                                    <input type="file" id="file-${i}" class="hidden" accept="image/*" onchange="handleFileUpload(event, ${i})">
+
+                                    <button onclick="document.getElementById('file-${i}').click()" id="btn-file-${i}" class="flex-1 bg-white border border-gray-200 py-2 rounded-lg text-[10px] font-black text-gray-400 hover:border-red-400 hover:text-red-500 transition">從電腦更換照片</button>
+
                                 </div>
+
                             </div>
+
                         </div>
+
                     `;
+
                 });
+
                 m.classList.remove('hidden'); m.classList.add('flex');
-            } else { m.classList.add('hidden'); }
+
+            } else {
+
+                m.classList.add('hidden');
+
+            }
+
         }
 
-        function previewFile(event, index) {
+
+
+        function handleFileUpload(event, index) {
+
             const file = event.target.files[0];
+
             if (!file) return;
+
             const reader = new FileReader();
+
             reader.onload = (e) => {
-                document.getElementById(`cfg-url-${index}`).value = e.target.result;
+
+                const dataUrl = e.target.result;
+
+                currentNews[index].img = dataUrl;
+
+                document.getElementById(`cfg-url-${index}`).value = "已上傳本地圖片";
+
+                document.getElementById(`btn-file-${index}`).innerText = "已選取：" + file.name;
+
+                document.getElementById(`btn-file-${index}`).classList.add('text-green-600');
+
             };
+
             reader.readAsDataURL(file);
+
         }
+
+
 
         function saveAndApply() {
+
             currentNews.forEach((item, i) => {
+
                 const val = document.getElementById(`cfg-url-${i}`).value;
-                if (val) item.img = val;
+
+                if (val && val !== "已上傳本地圖片") {
+
+                    item.img = val;
+
+                }
+
             });
-            setupUI(); toggleConfigModal();
+
+            setupUI();
+
+            toggleConfigModal();
+
         }
 
-        function resetToDefaults() { 
+
+
+        function resetToDefaults() {
+
             currentNews = JSON.parse(JSON.stringify(initialNewsData));
-            setupUI(); toggleConfigModal();
+
+            setupUI();
+
+            toggleConfigModal();
+
         }
 
-        let qrcode;
+
+
+        let qrcodeObj;
+
         function drawQR(val) {
-            const el = document.getElementById('qrcode'); el.innerHTML = '';
-            qrcode = new QRCode(el, { text: val || window.location.href, width: 140, height: 140 });
+
+            const el = document.getElementById('qrcode');
+
+            el.innerHTML = '';
+
+            qrcodeObj = new QRCode(el, { text: val || window.location.href, width: 160, height: 160, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+
         }
+
+
 
         function toggleQRModal() {
+
             const m = document.getElementById('qrBox');
+
             if (m.classList.contains('hidden')) {
-                m.classList.remove('hidden'); m.classList.add('flex');
+
+                m.classList.remove('hidden');
+
+                m.classList.add('flex');
+
                 drawQR(document.getElementById('urlField').value);
-            } else { m.classList.add('hidden'); }
+
+            } else {
+
+                m.classList.add('hidden');
+
+            }
+
         }
 
+
+
         window.onload = () => {
+
             setupUI();
+
             const scroller = document.getElementById('mainContainer');
-            scroller.addEventListener('wheel', (e) => { e.preventDefault(); scroller.scrollLeft += e.deltaY; });
+
+            scroller.addEventListener('wheel', (e) => {
+
+                e.preventDefault();
+
+                scroller.scrollLeft += e.deltaY;
+
+            });
+
         };
+
     </script>
+
 </body>
+
 </html>
+
